@@ -51,7 +51,7 @@ app.add_middleware(SessionMiddleware, secret_key="some-random-string")
 
 @app.get("/login/openshift")
 async def login_via_openshift(request: Request):
-    redirect_uri = request.url_for('auth_via_openshift')
+    redirect_uri = 'https' + request.url_for('auth_via_openshift')[4:]
     return await oauth.openshift_internal.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth/openshift")
