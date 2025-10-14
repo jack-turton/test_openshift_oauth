@@ -33,7 +33,7 @@ with open('/var/run/secrets/kubernetes.io/serviceaccount/token','r') as fh:
     secret = fh.readlines()[0]
 
 with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace','r') as fh:
-    client_id = 'system:serviceaccount:{fh.readlines()[0]}:{service_account_name}'
+    client_id = f'system:serviceaccount:{fh.readlines()[0]}:{service_account_name}'
     
 oauth = OAuth()
 oauth.register(
