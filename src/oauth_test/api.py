@@ -23,17 +23,24 @@ from authlib.integrations.starlette_client import OAuth
 
 import logging
 import sys
+from pathlib import Path
 log = logging.getLogger('authlib')
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.setLevel(logging.DEBUG)
 
 service_account_name = 'proxy'
 
-with open('/var/run/secrets/kubernetes.io/serviceaccount/token','r') as fh:
-    secret = fh.readlines()[0]
+if Path('/var/run/secrets/kubernetes.io/serviceaccount/token').exists():
+    with open('/var/run/secrets/kubernetes.io/serviceaccount/token','r') as fh:
+        secret = fh.readlines()[0]
+else:
+    secret = 'not_real'
 
-with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace','r') as fh:
-    client_id = f'system:serviceaccount:{fh.readlines()[0]}:{service_account_name}'
+if Path('/var/run/secrets/kubernetes.io/serviceaccount/namespace').exists():
+    with open('/var/run/secrets/kubernetes.io/serviceaccount/namespace','r') as fh:
+        client_id = f'system:serviceaccount:{fh.readlines()[0]}:{service_account_name}'
+else:
+    client_id = 'dummy'
     
 oauth = OAuth()
 oauth.register(
@@ -51,7 +58,8 @@ app.add_middleware(SessionMiddleware, secret_key="some-random-string")
 
 @app.get("/login/openshift")
 async def login_via_openshift(request: Request):
-    redirect_uri = 'https' + request.url_for('auth_via_openshift')[4:]
+    redirect_uri = request.url_for('auth_via_openshift')
+    redirect_uri = str(redirect_uri).replace("http://","https://",1)
     return await oauth.openshift_internal.authorize_redirect(request, redirect_uri)
 
 @app.get("/auth/openshift")
